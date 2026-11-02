@@ -2,6 +2,7 @@ package ekx.unit.ekxi.ai;
 
 import arc.math.geom.Vec2;
 import arc.util.Time;
+import arc.util.Tmp;
 import ekx.unit.NullAI;
 import mindustry.gen.Teamc;
 import mindustry.gen.Unit;
@@ -62,30 +63,36 @@ public class WeaponSchedulerAI extends AttackAI {
 
         if (scanTime <= 0 || strongest == null) {
             strongest = null;
-            float maxScore = 0f;
+            // 用数组包装一下，为了绕过 Lambda 的限制
+            final float[] maxScore = {0f};
+            final Teamc[] bestTarget = {null};
 
+            // 扫描单位
             for (Unit u : mindustry.gen.Groups.unit) {
                 if (u.team != unit.team && u.isValid()) {
                     float score = u.maxHealth / 100f - unit.dst(u) / 1000f;
-                    if (score > maxScore) {
-                        maxScore = score;
-                        strongest = u;
+                    if (score > maxScore[0]) {
+                        maxScore[0] = score;
+                        bestTarget[0] = u;
                     }
                 }
             }
             
+            // 扫描炮塔
             for (mindustry.game.Teams.TeamData data : mindustry.Vars.state.teams.present) {
                 if (data.team != unit.team && data.turretTree != null) {
                     data.turretTree.intersect(unit.x - 1500f, unit.y - 1500f, 3000f, 3000f, b -> {
                         float score = b.maxHealth / 60f - unit.dst(b) / 1000f;
                         if (b instanceof TurretBuild) score += 500f; 
-                        if (score > maxScore) {
-                            maxScore = score;
-                            strongest = b;
+                        if (score > maxScore[0]) {
+                            maxScore[0] = score;
+                            bestTarget[0] = b;
                         }
                     });
                 }
             }
+            
+            strongest = bestTarget[0];
             scanTime = 30f;
         }
     }
@@ -94,12 +101,11 @@ public class WeaponSchedulerAI extends AttackAI {
         if (strongest != null) {
             float dst = unit.dst(strongest);
             if (dst > 700f) {
-                // 直接用我们之前用过很多次的 Tmp.v1 向量
-                arc.math.geom.Vec2 v = arc.util.Tmp.v1.trns(unit.angleTo(strongest), unit.type.speed);
+                Vec2 v = Tmp.v1.trns(unit.angleTo(strongest), unit.type.speed);
                 unit.movePref(v);
                 unit.lookAt(strongest);
             } else if (dst < 400f) {
-                arc.math.geom.Vec2 v = arc.util.Tmp.v1.trns(unit.angleTo(strongest) + 180f, unit.type.speed);
+                Vec2 v = Tmp.v1.trns(unit.angleTo(strongest) + 180f, unit.type.speed);
                 unit.movePref(v);
                 unit.lookAt(strongest);
             } else {
