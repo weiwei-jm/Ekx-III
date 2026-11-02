@@ -1,6 +1,6 @@
 package ekx.unit.ekxi.ai;
 
-import ekx.unit.ekxi.EkxIDamage;
+import arc.util.Time;
 import mindustry.entities.Damage;
 import mindustry.gen.Healthc;
 import mindustry.gen.Teamc;
@@ -16,8 +16,7 @@ public class BasicLaserAI extends AttackAI {
 
     @Override
     public void updateWeapon(Teamc target) {
-        // 持续 5 秒钟（300帧）
-        time += mindustry.core.Time.delta;
+        time += Time.delta;
         if (time > 300f) {
             ended = true;
             return;
@@ -27,20 +26,18 @@ public class BasicLaserAI extends AttackAI {
             float angle = unit.angleTo(target);
             float length = 600f;
             
-            // 发射一道蓝色的激光（直接判定）
             Damage.collideLine(unit.team, unit.x, unit.y, angle, length, 
                 h -> {
                     if (h instanceof Healthc hc) {
-                        EkxIDamage.damageUnit((mindustry.gen.Unit)hc, 2000f, true, null);
+                        hc.damagePierce(2000f);
                     }
                 }, 
                 h -> true, 
                 (h, x, y) -> {}
             );
-            
-            reload = 15f; // 持续射击间隔
+            reload = 15f; 
         }
         
-        if (reload > 0) reload -= mindustry.core.Time.delta;
+        if (reload > 0) reload -= Time.delta;
     }
 }
