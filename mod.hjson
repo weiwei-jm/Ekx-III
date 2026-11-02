@@ -8,7 +8,7 @@ name: "Ekx-III"
 author: "韦韦"
 
 #the fully qualified main class of the mod
-main: "exk.EkxMod"
+main: "ekx.EkxMod"
 
 #the mod description as seen in the mod dialog
 description: "A Mindustry Java mod template."
