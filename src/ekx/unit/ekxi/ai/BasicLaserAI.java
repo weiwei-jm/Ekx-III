@@ -1,9 +1,10 @@
 package ekx.unit.ekxi.ai;
 
+import arc.math.Angles;
+import arc.math.Mathf;
 import arc.math.geom.Intersector;
 import arc.math.geom.Vec2;
 import arc.util.Time;
-import mindustry.entities.Units;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
 import mindustry.gen.Unit;
@@ -29,14 +30,13 @@ public class BasicLaserAI extends AttackAI {
             float angle = unit.angleTo(target);
             float length = 600f;
             
-            // 手写激光命中判定，绕开原版复杂的 Damage.collideLine 参数限制
-            Vec2 p1 = new Vec2(unit.x, unit.y);
-            Vec2 p2 = new Vec2(unit.x, unit.y).add(Vec2.trns(angle, length));
-            
+            // 手写激光判定，避开原版烦人的参数限制
             for (Unit u : Groups.unit) {
                 if (u.team != unit.team) {
-                    Vec2 nearest = Intersector.nearestSegmentPoint(p1, p2, u.x, u.y, new Vec2());
-                    if (nearest.dst(u.x, u.y) < (u.hitSize / 2f) + 10f) {
+                    // 计算敌人到激光线段的距离
+                    float angleToU = unit.angleTo(u);
+                    float dstToU = unit.dst(u);
+                    if (dstToU < length && Angles.angleDist(angle, angleToU) < Mathf.atan2(u.hitSize / 2f, dstToU)) {
                         u.damagePierce(2000f);
                     }
                 }
