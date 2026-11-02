@@ -1,13 +1,13 @@
 package ekx.unit;
 
 import mindustry.type.UnitType;
-import ekx.unit.empathy.EmpathyUnitType;
+import ekx.unit.ekxi.EkxIUnitType; // 改成了 EkxIUnitType
 
 public class EkxUnitTypes {
-    public static UnitType empathy;
+    public static UnitType ekx1; // 变量名顺便改成了 ekx1
 
     public static void load() {
-        empathy = new EmpathyUnitType("ekx1");
-        empathy.localizedName = "Ekx1";
+        ekx1 = new EkxIUnitType("ekx1");
+        ekx1.localizedName = "Ekx-I";
     }
 }
