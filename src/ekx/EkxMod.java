@@ -1,7 +1,7 @@
-package exk;
+package ekx;
 
 import mindustry.mod.*;
-import exk.unit.ExkUnitTypes;
+import ekx.unit.EkxUnitTypes;
 
 public class EkxMod extends Mod {
     @Override
