@@ -1,5 +1,4 @@
 package ekx.unit.ekxi.ai;
-package ekx.unit.ekxi.ai;
 
 import arc.util.Time;
 import mindustry.content.Fx;
