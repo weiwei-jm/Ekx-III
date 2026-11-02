@@ -1,6 +1,7 @@
 package ekx.unit.ekxi;
 
 import ekx.unit.NullAI;
+import ekx.unit.ekxi.ai.WeaponSchedulerAI; // 引入调度器
 import mindustry.Vars;
 import mindustry.gen.Unit;
 import mindustry.type.StatusEffect;
@@ -13,8 +14,9 @@ public class EkxIUnitType extends UnitType {
         flying = true;
         hitSize = 16f;
         drag = 0.07f;
-        health = 10000f;
+        health = 1f; // 锁死 1 血
         speed = 2f;
+        range = 800f;
 
         outlines = false;
         drawCell = false;
@@ -24,9 +26,10 @@ public class EkxIUnitType extends UnitType {
 
         engineSize = -1f;
         
-        /*aiController = mindustry.ai.types.FollowAI::new;*/
+        // 【关键】把 AI 换成我们写的武器调度器
+        aiController = WeaponSchedulerAI::new;
         controller = u -> new NullAI();
-        constructor = EkxIUnit::new; // 改成了 EkxIUnit
+        constructor = EkxIUnit::new;
 
         envEnabled = Env.any;
         envDisabled = 0;
@@ -42,7 +45,7 @@ public class EkxIUnitType extends UnitType {
 
     @Override
     public void update(Unit unit) {
-        if (!(unit instanceof EkxIUnit)) { // 改成了 EkxIUnit
+        if (!(unit instanceof EkxIUnit)) {
             unit.destroy();
             return;
         }
