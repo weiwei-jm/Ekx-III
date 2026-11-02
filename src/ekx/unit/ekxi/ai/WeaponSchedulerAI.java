@@ -1,7 +1,7 @@
 package ekx.unit.ekxi.ai;
 
-import arc.math.Mathf;
 import arc.math.geom.Vec2;
+import ekx.unit.NullAI;
 import mindustry.entities.Units;
 import mindustry.gen.Building;
 import mindustry.gen.Teamc;
@@ -15,6 +15,9 @@ public class WeaponSchedulerAI extends AttackAI {
     private Teamc strongest;
     private float scanTime = 0f;
 
+    // 备用挂机 AI
+    private final NullAI idleAI = new NullAI();
+
     public WeaponSchedulerAI() {
         weapons = new AttackAI[]{
             new BasicLaserAI(),
@@ -26,11 +29,24 @@ public class WeaponSchedulerAI extends AttackAI {
     public void updateUnit() {
         if (unit == null || unit.dead) return;
 
-        // 1. 寻找最有价值的目标（追杀/支援）
+        // 1. 寻找目标
         updateTargeting();
+
+        // 2. 如果没有目标，切换回 NullAI 挂机
+        if (strongest == null) {
+            // 确保 idleAI 绑定到了当前单位
+            if (idleAI.unit() != unit) {
+                idleAI.unit(unit);
+            }
+            // 让原版的空 AI 接管（可以停下来或者执行原版基础行为）
+            idleAI.updateUnit();
+            return; // 没敌人，直接返回，不执行下面的武器逻辑
+        }
+
+        // 3. 有目标，执行移动和攻击
         updateMovement();
 
-        // 2. 初始化武器
+        // 4. 初始化武器
         if (weapons[currentWeaponIndex].unit() != unit) {
             weapons[currentWeaponIndex].unit(unit);
             weapons[currentWeaponIndex].reset();
@@ -39,7 +55,7 @@ public class WeaponSchedulerAI extends AttackAI {
         AttackAI current = weapons[currentWeaponIndex];
         current.updateUnit();
 
-        // 3. 切换武器
+        // 5. 切换武器
         if (current.ended) {
             currentWeaponIndex = (currentWeaponIndex + 1) % weapons.length;
         }
@@ -56,7 +72,7 @@ public class WeaponSchedulerAI extends AttackAI {
             strongest = null;
             float maxScore = 0f;
 
-            // 扫描全图敌人，计算威胁值（血量越高、距离越近，分越高）
+            // 扫描单位
             for (Unit u : mindustry.gen.Groups.unit) {
                 if (u.team != unit.team && u.isValid()) {
                     float score = u.maxHealth / 100f - unit.dst(u) / 1000f;
@@ -72,7 +88,7 @@ public class WeaponSchedulerAI extends AttackAI {
                 if (data.team != unit.team && data.turretTree != null) {
                     data.turretTree.intersect(unit.x - 1500f, unit.y - 1500f, 3000f, 3000f, b -> {
                         float score = b.maxHealth / 60f - unit.dst(b) / 1000f;
-                        if (b instanceof TurretBuild) score += 500f; // 炮塔优先度更高
+                        if (b instanceof TurretBuild) score += 500f; 
                         if (score > maxScore) {
                             maxScore = score;
                             strongest = b;
@@ -80,23 +96,20 @@ public class WeaponSchedulerAI extends AttackAI {
                     });
                 }
             }
-            scanTime = 30f; // 每半秒扫描一次
+            scanTime = 10f;
         }
     }
 
     private void updateMovement() {
         if (strongest != null) {
             float dst = unit.dst(strongest);
-            // 如果离目标太远（大于攻击距离 700），就主动飞过去支援
             if (dst > 700f) {
                 unit.movePref(Vec2.trns(unit.angleTo(strongest), unit.type.speed));
                 unit.lookAt(strongest);
             } else if (dst < 400f) {
-                // 如果贴得太近，就拉扯一下距离
                 unit.movePref(Vec2.trns(unit.angleTo(strongest) + 180f, unit.type.speed));
                 unit.lookAt(strongest);
             } else {
-                // 在射程内，悬停
                 unit.lookAt(strongest);
             }
         }
@@ -104,4 +117,4 @@ public class WeaponSchedulerAI extends AttackAI {
 
     @Override public void updateWeapon(Teamc target) {}
     @Override public void reset() {}
-            }
+}
