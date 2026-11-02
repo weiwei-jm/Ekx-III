@@ -24,7 +24,7 @@ public class EkxIUnitType extends UnitType {
 
         engineSize = -1f;
         
-        aiController = mindustry.ai.types.FollowAI::new;
+        /*aiController = mindustry.ai.types.FollowAI::new;*/
         controller = u -> new NullAI();
         constructor = EkxIUnit::new; // 改成了 EkxIUnit
 
