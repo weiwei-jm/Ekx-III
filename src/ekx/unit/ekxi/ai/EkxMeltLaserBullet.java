@@ -99,7 +99,7 @@ public class EkxMeltLaserBullet extends BulletType {
         }
     }
 
-    @override
+    @Override
     public void init(Bullet b) {
         Tmp.v1.trns(b.rotation(), 40f).add(b.x, b.y);
         Effect.shake(10f, 10f, b.x, b.y);
