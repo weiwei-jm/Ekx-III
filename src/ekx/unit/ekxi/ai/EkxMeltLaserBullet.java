@@ -18,7 +18,7 @@ import mindustry.world.blocks.defense.turrets.Turret.TurretBuild; // 修复
 
 public class EkxMeltLaserBullet extends BulletType {
     float width = 160f;
-    float length = 800f;
+    float length = 10000f;
     float end = 300f;
     Interp dwidth = Interp.circleOut;
     
@@ -43,7 +43,7 @@ public class EkxMeltLaserBullet extends BulletType {
         hitEffect = Fx.hitLaserBlast;
         status = StatusEffects.melting;
         statusDuration = 120f;
-        damage = 5000f;
+        damage = 9000f;
         drawSize = length * 2.1f;
         knockback = 60f;
         layer = (Layer.bullet + Layer.effect) / 2;
@@ -94,17 +94,15 @@ public class EkxMeltLaserBullet extends BulletType {
 
     @Override
     public void init(Bullet b) {
-        Tmp.v1.trns(b.rotation(), 40f).add(b.x, b.y);
+        Sounds.beamHeal.at(b.x, b.y); // 去掉变调参数，原音播放
         Effect.shake(10f, 10f, b.x, b.y);
-        Sounds.beamPlasma.at(b.x, b.y, 2f, 1.5f);
     }
 
     @Override
     public void update(Bullet b) {
-        if (b.timer(0, 5f)) {
-            Vec2 v = Tmp.v1.trns(b.rotation(), length).add(b);
-            float vx = v.x;
-            float vy = v.y;
+        if (b.time > 140f && b.time - Time.delta <= 140f) {            Sounds.beamHeal.at(b.x, b.y); // 同样原音播放
+        Effect.shake(20f, 20f, b.x, b.y);
+
             float dw = timeWidth(b);
 
             Damage.collideLine(b, b.team, b.x, b.y, b.rotation(), length, false, true, -1);
@@ -126,50 +124,28 @@ public class EkxMeltLaserBullet extends BulletType {
         }
     }
 
-    @Override
-    public void draw(Bullet b) {
-        Vec2 v = Tmp.v1.trns(b.rotation(), end).add(b.x, b.y);
-        Vec2 v2 = Tmp.v2.trns(b.rotation(), length - end).add(v.x, v.y);
-        float w = timeWidth(b);
+@Override
+public void draw(Bullet b) {
+    float w = timeWidth(b);
+    
+    // 1. 脚下画法阵
+    drawMagicCircle(b.x, b.y, w * 0.6f + 30f, Time.time);
 
-        for (int i = 0; i < 3; i++) {
-            float dw = w * widths[i] * (1 + Mathf.absin(8f, 0.1f));
+    // 2. 绘制激光
+    Vec2 v = Tmp.v1.trns(b.rotation(), end).add(b.x, b.y);
+    Vec2 v2 = Tmp.v2.trns(b.rotation(), length - end).add(v.x, v.y);
 
-            Draw.color(colors[i]);
-            Lines.stroke(dw); 
-            Fill.circle(v.x, v.y, Lines.getStroke() / 2f);
-Lines.lineAngle(v.x, v.y, b.rotation(), end, false);
-            Lines.lineAngle(v.x, v.y, b.rotation(), length - end, false);
-            Drawf.tri(v2.x, v2.y, Lines.getStroke(), width * 2 + dw, b.rotation());
-        }
+    for (int i = 0; i < 3; i++) {
+        float dw = w * widths[i] * (1 + Mathf.absin(8f, 0.1f));
+        Draw.color(colors[i]);
+        Lines.stroke(dw);
         
-        if (b.time > 140f) {
-            float scl = Interp.pow2Out.apply(Mathf.clamp((b.time - 140f) / 5)) * Interp.pow3In.apply(Mathf.clamp((lifetime - b.time) / 80f));
-            Rand r = new Rand(b.id + 1236L);
-            Rand r2 = new Rand(b.id + 999L);
-
-            for (int i = 0; i < 75; i++) {
-                float d = r.random(20f, 40f);
-                float time = (Time.time + r.random(d));
-                float dtime = (time % d) / d;
-                float slope = Interp.pow2Out.apply(Mathf.curve(dtime, 0f, 0.05f) * Mathf.curve(1 - dtime, 0f, 0.05f));
-
-                int seed = (int) (time / d) + r.nextInt();
-                r2.setSeed(r.nextLong());
-
-                float dh = r2.random(120f, 220f);
-                float dw = dh * r2.random(0.05f, 0.15f) * scl * slope;
-                float rx = r2.range(Math.max(w - dw, 0f)) / 2f;
-                float arx = Math.abs(rx);
-                float xp = rx * getLaserWidth(dtime * (length - dh) + dh);
-                float yp = dtime * ((length - (end + this.width / 2)) + (w - arx) * 4.5f) + dh;
-                Color rc = r2.chance(0.1f + Interp.pow3In.apply((w - arx) / w) * 0.7f) ? Color.white : EkxPal.empathy;
-
-                Draw.color(rc);
-                v.trns(b.rotation(), (yp + end / 1.5f) - (w - arx) * 1.5f, xp).add(b.x, b.y);
-                
-                Fill.circle(v.x, v.y, dw / 2f);
-            }
+        // 这里加了 Fill.circle，让起点有一个光晕，从法阵中心喷射
+        Fill.circle(b.x, b.y, Lines.getStroke() / 2f); 
+        Lines.lineAngle(b.x, b.y, b.rotation(), length, false);
+        
+        Drawf.tri(v2.x, v2.y, Lines.getStroke(), width * 2 + dw, b.rotation());
+    }
         }
         Drawf.light(b.x, b.y, v2.x, v2.y, w * 2 + 20f, colors[0], 0.75f);
         Draw.reset();
