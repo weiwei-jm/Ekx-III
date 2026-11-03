@@ -9,9 +9,12 @@ import arc.util.*;
 import ekx.EkxPal;
 import mindustry.content.*;
 import mindustry.entities.Damage;
+import mindustry.entities.Effect;
 import mindustry.entities.bullet.*;
+import mindustry.entities.units.WeaponMount; // 修复
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.world.blocks.defense.turrets.Turret.TurretBuild; // 修复
 
 public class EkxMeltLaserBullet extends BulletType {
     float width = 160f;
@@ -19,7 +22,6 @@ public class EkxMeltLaserBullet extends BulletType {
     float end = 300f;
     Interp dwidth = Interp.circleOut;
     
-    // 替换为你的蓝光配色
     Color[] colors = {EkxPal.empathy.cpy().a(0.4f), EkxPal.empathy, Color.white};
     float[] widths = {1.5f, 1f, 0.8f};
 
@@ -37,9 +39,7 @@ public class EkxMeltLaserBullet extends BulletType {
         pierceCap = -1;
         impact = true;
 
-        // 总持续时间 4.5 秒 (270 帧)。前 2.3 秒蓄力变粗，后 2.2 秒保持
         lifetime = 4.5f * 60f;
-
         despawnEffect = Fx.none;
         shootEffect = Fx.none;
         hitEffect = Fx.hitLaserBlast;
@@ -62,7 +62,6 @@ public class EkxMeltLaserBullet extends BulletType {
 
     float timeWidth(Bullet b) {
         float w1 = 5f;
-        // 前 140 帧变大，最后 80 帧变细消失
         return (w1 * Mathf.clamp(b.time / 60f) + (width - w1) * Interp.pow2Out.apply(Mathf.clamp((b.time - 140f) / 5))) * Interp.pow3In.apply(Mathf.clamp((lifetime - b.time) / 80f));
     }
 
@@ -103,9 +102,8 @@ public class EkxMeltLaserBullet extends BulletType {
     @Override
     public void init(Bullet b) {
         Tmp.v1.trns(b.rotation(), 40f).add(b.x, b.y);
-        // 简单的开火震屏
         Effect.shake(10f, 10f, b.x, b.y);
-        Sounds.laserblast.at(b.x, b.y, 2f, 1.5f);
+        mindustry.content.Sounds.laser.at(b.x, b.y, 2f, 1.5f); // 修复音效
     }
 
     @Override
@@ -116,10 +114,8 @@ public class EkxMeltLaserBullet extends BulletType {
             float vy = v.y;
             float dw = timeWidth(b);
 
-            // 用原版最暴力的线段判定
             Damage.collideLine(b, b.team, b.x, b.y, b.rotation(), length, false, true, -1);
             
-            // 额外处理击退和特效
             for (mindustry.game.Teams.TeamData data : mindustry.Vars.state.teams.present) {
                 if (data.team != b.team) {
                     if (data.unitTree != null) {
@@ -148,10 +144,8 @@ public class EkxMeltLaserBullet extends BulletType {
 
             Draw.color(colors[i]);
             Lines.stroke(dw);
-            // 画激光柱
             Draw.rect(hcircle, v.x, v.y, end * 2, Lines.getStroke(), b.rotation() + 180f);
-            Lines.lineAngle(v.x, v.y, b.rotation(),
-            length - end, false);
+            Lines.lineAngle(v.x, v.y, b.rotation(), length - end, false);
             Drawf.tri(v2.x, v2.y, Lines.getStroke(), width * 2 + dw, b.rotation());
         }
         
@@ -186,4 +180,4 @@ public class EkxMeltLaserBullet extends BulletType {
         Drawf.light(b.x, b.y, v2.x, v2.y, w * 2 + 20f, colors[0], 0.75f);
         Draw.reset();
     }
-}
+                }
