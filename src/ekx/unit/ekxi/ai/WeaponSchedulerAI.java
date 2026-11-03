@@ -40,7 +40,7 @@ public class WeaponSchedulerAI extends AttackAI {
                         magicAI.reset();
                     } else {
                         // 找不到大激光类，直接用原版激光炮特效代替
-                        mindustry.content.Fx.laserShoot.at(unit.x, unit.y, unit.angleTo(strongest));
+                        mindustry.content.Fx.hitLaserBlast.at(unit.x, unit.y, unit.angleTo(strongest));
                         if(strongest instanceof mindustry.gen.Healthc h) h.damagePierce(20000f);
                         mindustry.Vars.renderer.shake(15f, 10f);
                     }
