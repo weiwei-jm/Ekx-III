@@ -154,8 +154,8 @@ public class Ekx3DMagicAI extends AttackAI {
 
     @Override
     public void draw() {
-        Color darkC = Tmp.c1.set(ExkPal.empathyDark).lerp(ExkPal.empathy, Mathf.absin(2f, 1f));
-        Color col1 = Tmp.c2.set(ExkPal.empathy).lerp(Color.white, Mathf.absin(2f, 1f));
+        Color darkC = Tmp.c1.set(EkxPal.empathyDark).lerp(ExkPal.empathy, Mathf.absin(2f, 1f));
+        Color col1 = Tmp.c2.set(EkxPal.empathy).lerp(Color.white, Mathf.absin(2f, 1f));
         float fin = Mathf.clamp(time / 40f);
         Draw.color(darkC, fin * 0.5f);
         
