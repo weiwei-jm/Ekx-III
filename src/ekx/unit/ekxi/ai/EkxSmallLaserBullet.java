@@ -24,17 +24,14 @@ public class EkxSmallLaserBullet extends BulletType {
         absorbable = false;
         hittable = false;
         keepVelocity = false;
-
         pierce = true;
         pierceArmor = true;
         pierceCap = -1;
         impact = true;
-
         lifetime = 20f; 
         despawnEffect = Fx.none;
         shootEffect = Fx.none;
         hitEffect = Fx.hitLaserBlast;
-
         status = StatusEffects.disarmed;
         statusDuration = 60f;
         damage = 2000f;
@@ -48,27 +45,20 @@ public class EkxSmallLaserBullet extends BulletType {
         }
     }
 
-    // 纯手工绘制 3D 法阵（圆 + 五角星）
     private void drawMagicCircle(float x, float y, float rotZ, float radius, float time) {
         Draw.z(Layer.flyingUnit - 1f);
-        
-        // 画圆
         Draw.color(ExkPal.empathyAdd, 0.8f);
         Lines.stroke(2f);
         Lines.beginLine();
         for (int i = 0; i <= 24; i++) {
             float ang = i * 15f + time * 2f;
-            // 模拟简单的 3D 透视（Y轴压扁）
             Lines.linePoint(x + Mathf.cosDeg(ang) * radius, y + Mathf.sinDeg(ang) * radius * 0.4f);
         }
         Lines.endLine();
-
-        // 画五角星
         Draw.color(Color.white, 0.9f);
         Lines.stroke(2.5f);
         Lines.beginLine();
         for (int i = 0; i <= 5; i++) {
-            // 五角星交叉连线，每次跨 144 度
             float ang = rotZ + (i * 144f) + time * 3f; 
             float px = x + Mathf.cosDeg(ang) * radius * 0.8f;
             float py = y + Mathf.sinDeg(ang) * radius * 0.8f * 0.4f;
@@ -79,15 +69,12 @@ public class EkxSmallLaserBullet extends BulletType {
 
     @Override
     public void draw(Bullet b) {
-        // 在单位脚下画法阵
         drawMagicCircle(b.x, b.y, b.rotation(), 45f, Time.time + b.id);
-
         float fc = Mathf.clamp(b.time / 4f);
         float mwidth = Mathf.clamp((b.lifetime - b.time) / 16f) * width * 1.25f;
         float l = fc * length;
         Vec2 v = Tmp.v1.trns(b.rotation(), l).add(b);
         float sin = (Mathf.absin(5f, 0.1f) + 1f);
-
         Draw.z(Layer.bullet + 1f);
         for (int i = 0; i < 4; i++) {
             Draw.color(colors[i]);
@@ -95,7 +82,6 @@ public class EkxSmallLaserBullet extends BulletType {
             Lines.line(b.x, b.y, v.x, v.y, false);
             Drawf.tri(v.x, v.y, Lines.getStroke(), mwidth * 3 + width / 1.5f, b.rotation());
             Drawf.tri(v.x, v.y, Lines.getStroke(), mwidth * 2 + width / 2f, b.rotation() + 180f);
-
             for (int s : Mathf.signs) {
                 Drawf.tri(b.x, b.y, Lines.getStroke() / 2f, (mwidth * widths[i] * 2 + 120f) * sin * fc, b.rotation() + 90f * s);
             }
