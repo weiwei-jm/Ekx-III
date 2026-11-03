@@ -19,197 +19,131 @@ import mindustry.graphics.Layer;
 
 public class Ekx3DMagicAI extends AttackAI {
     static Vec2[] ringPos = {new Vec2(44.25f, 18f), new Vec2(30.5f, 0f), new Vec2(19.5f, 7.5f)};
-    static float[] ringMoveSpeed = {2f, 4f, 8f}, ringReloadTimes = {12f, 8f, 5f};
+    static float[] ringMoveSpeed = {2f, 4f, 8f};
     static float[][] rotations3D = {{0.0625f, 1f, 0.125f}, {0f, 0.25f, 1f}, {1f, 1f, 0.1f}};
     
     float time = 0f;
     float[] ringRotations = new float[3], ringRotations3D = new float[3 * 3];
-    float[] ringReloads = new float[3 * 8];
-    float[] eyeLasers = new float[3 * 8 * 3];
-    int[] ringIdxs = new int[3];
-
-    Seq<Teamc> nearests = new Seq<>(true, 3 * 8 + 1);
-    FloatSeq nearestScore = new FloatSeq(true, 3 * 8 + 1);
-    float targetingUpdate = 0f;
+    
+    // 动画时间参数
+    final float DRAW_TIME = 120f; // 2秒画阵
+    final float TURN_TIME = 30f;  // 0.5秒转身
+    final float LASER_TIME = 240f; // 4秒激光
+    final float FADE_TIME = 30f;  // 0.5秒消失
+    final float TOTAL_TIME = DRAW_TIME + TURN_TIME + LASER_TIME + FADE_TIME;
+    
+    float startRotation = 0f;
+    float targetRotation = 0f;
+    boolean laserFired = false;
 
     @Override
     public void reset() {
         super.reset();
         time = 0f;
+        laserFired = false;
         java.util.Arrays.fill(ringRotations, 0f);
         java.util.Arrays.fill(ringRotations3D, 0f);
-        java.util.Arrays.fill(ringReloads, 0f);
     }
 
     @Override
     public void updateWeapon(Teamc target) {
-        updateTargeting();
         time += Time.delta;
-        float duration = 15f * 60;
 
-        if (time < duration) {
-            float speed = Mathf.pow(Mathf.clamp(time / 700f) * 3f, 0.5f);
-            float speed2 = Mathf.pow(Mathf.clamp(time / duration), 0.5f);
-            float out = 1f - Interp.pow2.apply(Mathf.clamp((time - 10f * 60f) / (4.5f * 60)));
+        // 1. 画阵期间（2秒），缓慢旋转
+        if (time < DRAW_TIME) {
+            float speed = Interp.pow2Out.apply(time / DRAW_TIME);
             for (int i = 0; i < 3; i++) {
-                ringRotations[i] += ringMoveSpeed[i] * speed * Time.delta * 0.5f * out;
-                if (time < 12 * 60f) {
-                    for (int j = 0; j < 3; j++) {
-                        int k = i * 3 + j;
-                        ringRotations3D[k] += speed2 * Time.delta * 2f * (rotations3D[i][j]);
-                        ringRotations3D[k] %= 360f;
-                    }
-                } else {
-                    float f = Mathf.clamp((time - 12 * 60f) / (3f * 60));
-                    for (int j = 0; j < 3; j++) {
-                        int k = i * 3 + j;
-                        float rs = rotations3D[i][j];
-                        if (ringRotations3D[k] > 0f) {
-                            float anr = 45f;
-                            float rr = (1f - Mathf.clamp((ringRotations3D[k] - (360 - anr)) / anr)) * 0.99f + 0.01f;
-                            ringRotations3D[k] += speed2 * Time.delta * 2f * (rs != 0f ? Mathf.lerp(rs, Mathf.sqrt(1f / rs), f) : 0f) * rr;
-                            if (ringRotations3D[k] >= 360f) ringRotations3D[k] = 0f;
-                        }
-                    }
+                ringRotations[i] += ringMoveSpeed[i] * speed * Time.delta * 0.2f;
+                for (int j = 0; j < 3; j++) {
+                    int k = i * 3 + j;
+                    ringRotations3D[k] += speed * Time.delta * 1.5f * rotations3D[i][j];
+                    ringRotations3D[k] %= 360f;
                 }
             }
-        } else if (time >= duration) {
+        } 
+        // 2. 转身期间（0.5秒）
+        else if (time < DRAW_TIME + TURN_TIME) {
+            if (startRotation == 0f && target != null) {
+                startRotation = unit.rotation;
+                targetRotation = unit.angleTo(target);
+            }
+            // 平滑滑向目标
+            float turnProgress = (time - DRAW_TIME) / TURN_TIME;
+            unit.rotation = Mathf.lerp(startRotation, targetRotation, Interp.pow2Out.apply(turnProgress));
+        } 
+        // 3. 激光开火期间（4秒）
+        else if (time < DRAW_TIME + TURN_TIME + LASER_TIME) {
+            if (!laserFired && target != null) {
+                // 发射大光柱
+                new EkxMeltLaserBullet().create(unit, unit.team, unit.x, unit.y, unit.rotation);
+                laserFired = true;
+                mindustry.Vars.renderer.shake(15f, 60f);
+            }
+            // 开火时法阵缓慢自转
+            for (int i = 0; i < 3; i++) {
+                ringRotations[i] += ringMoveSpeed[i] * Time.delta * 0.05f;
+            }
+        }
+        // 4. 结束判定
+        else if (time >= TOTAL_TIME) {
             ended = true;
-            for (Unit u : Groups.unit) {
-                if (u.team != unit.team && unit.within(u, 500f)) {
-                    u.damagePierce(u.maxHealth + 1000f);
-                    Fx.shockwave.at(u.x, u.y);
-                }
-            }
-            Fx.shockwave.at(unit.x, unit.y);
-            return;
-        }
-        updateRings();
-    }
-
-    void updateRings() {
-        float duration = 15f * 60;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 8; j++) {
-                eyeLasers[((i * 8 + j) * 3) + 2] -= Time.delta;
-            }
-        }
-        if (!nearests.isEmpty() && time < (duration - 30f)) {
-            for (int i = 0; i < 3; i++) {
-                if (ringReloads[i] <= 0f) {
-                    int idx = (i * 8 + ringIdxs[i]);
-                    Teamc tar = nearests.get(idx % nearests.size);
-                    if (tar != null) {
-                        if (tar instanceof mindustry.gen.Healthc h) h.damagePierce(10000f);
-                        eyeLasers[idx * 3] = tar.x();
-                        eyeLasers[idx * 3 + 1] = tar.y();
-                        eyeLasers[idx * 3 + 2] = 30f;
-                    }
-                    ringReloads[i] = ringReloadTimes[i];
-                    ringIdxs[i] = Mathf.mod(ringIdxs[i] + ((i % 2) == 0 ? 1 : -1), 8);
-                }
-            }
-        }
-        for (int i = 0; i < 3; i++) ringReloads[i] -= Time.delta;
-    }
-
-    void updateTargeting() {
-        if ((targetingUpdate -= Time.delta) <= 0f) {
-            nearests.clear();
-            nearestScore.clear();
-            for (Unit u : Groups.unit) {
-                if (u.team != unit.team) {
-                    float dst = u.dst(unit);
-                    if (nearestScore.isEmpty()) {
-                        nearests.add(u);
-                        nearestScore.add(dst);
-                    } else {
-                        for (int i = nearests.size - 1; i >= 0; i--) {
-     if (dst <= nearestScore.items[i]) {
-                                nearests.insert(i + 1, u);
-                                nearestScore.insert(i + 1, dst);
-                                if (nearestScore.size > 24) {
-                                    nearests.remove(0);
-                                    nearestScore.removeIndex(0);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            targetingUpdate = 5f;
         }
     }
 
+    @Override
     public void draw() {
+        // 计算全局透明度（在最后0.5秒慢慢消失）
+        float fadeAlpha = 1f;
+        if (time > DRAW_TIME + TURN_TIME + LASER_TIME) {
+            fadeAlpha = 1f - ((time - (DRAW_TIME + TURN_TIME + LASER_TIME)) / FADE_TIME);
+        }
+        fadeAlpha = Mathf.clamp(fadeAlpha);
+
         Color darkC = Tmp.c1.set(EkxPal.empathyDark).lerp(EkxPal.empathy, Mathf.absin(2f, 1f));
         Color col1 = Tmp.c2.set(EkxPal.empathy).lerp(Color.white, Mathf.absin(2f, 1f));
-        float fin = Mathf.clamp(time / 40f);
-        Draw.color(darkC, fin * 0.5f);
-        
-        for (int i = 0; i < 3; i++) {
-            Draw.color(darkC, fin);
-            int k = i * 3;
-            drawCircle3D(unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], 80f + i * 40f, ringRotations[i], 64);
-            Draw.color(Color.white);
-            for (int j = 0; j < 8; j++) {
-                Vec2 p = eyePos(i, j).scl(2f);
-                Tmp.v2.set(p).setLength(120f);
-                Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
-                float sz1 = 700f / (700f - v3.z);
-                Fill.circle(v3.x * sz1 * (p.len() / Tmp.v2.len()) + unit.x, v3.y * sz1 * (p.len() / Tmp.v2.len()) + unit.y, 2f * fin);
-            }
-        }
 
         float z = Draw.z();
         Draw.z(Layer.flyingUnit + 1f);
+
+        // 计算描绘进度（0 到 1）
+        float drawProgress = Mathf.clamp(time / DRAW_TIME);
+        // 为了让线条变粗，我们预留了不同的层级
         for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 8; j++) {
-                int idx = (i * 8 + j) * 3;
-                if (eyeLasers[idx + 2] <= 0.0001f) continue;
-                Vec2 p = eyePos3D(i, j, 120f);
-                float s = 5.25f * (eyeLasers[idx + 2] / 30f);
-                Draw.z(z);
-                Draw.color(col1);
-                Lines.stroke(s);
-                Lines.line(p.x, p.y, eyeLasers[idx], eyeLasers[idx + 1], false);
-                Fill.circle(p.x, p.y, s);
-                Fill.circle(eyeLasers[idx], eyeLasers[idx + 1], s);
-                Draw.z(z + 0.01f);
-                Draw.color(Color.white);
-                Lines.stroke(s * 0.5f);
-                Lines.line(p.x, p.y, eyeLasers[idx], eyeLasers[idx + 1], false);
-                Fill.circle(p.x, p.y, s * 0.5f);
-                Fill.circle(eyeLasers[idx], eyeLasers[idx + 1], s * 0.5f);
-            }
+            int k = i * 3;
+            // 根据进度，半径逐渐展开，线条逐渐变粗
+            float rad = (80f + i * 40f) * Interp.pow2Out.apply(drawProgress);
+            float lineWidth = 5f * Interp.pow2Out.apply(drawProgress) * fadeAlpha;
+
+            // 绘制自发光外圈
+            Draw.color(darkC.cpy().a(0.4f * fadeAlpha));
+            Lines.stroke(lineWidth * 2.5f);
+            drawCircle3D(unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], rad, ringRotations[i], (int)(64 * drawProgress));
+
+            // 绘制实体主线条
+            Draw.color(col1.cpy().a(fadeAlpha));
+            Lines.stroke(lineWidth);
+            drawCircle3D(unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], rad, ringRotations[i], (int)(64 * drawProgress));
+            
+            // 绘制白色高亮
+            Draw.color(Color.white, fadeAlpha);
+            Lines.stroke(lineWidth * 0.4f);
+            drawCircle3D(unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], rad, ringRotations[i], (int)(64 * drawProgress));
         }
+
         Draw.z(z);
         Draw.color();
     }
 
-    Vec2 eyePos3D(int ring, int idx, float size) {
-        Vec2 p = eyePos(ring, idx).scl(2f);
-        Tmp.v2.set(p).setLength(size);
-        int k = ring * 3;
-        Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
-        float sz1 = 700f / (700f - v3.z);
-        return Tmp.v3.set(v3.x * sz1 * (p.len() / Tmp.v2.len()) + unit.x, v3.y * sz1 * (p.len() / Tmp.v2.len()) + unit.y);
-    }
-
-    Vec2 eyePos(int ring, int idx) {
-        if (ringPos[ring].y == 0) return Tmp.v1.trns(ringRotations[ring] + idx * 45f, ringPos[ring].x);
-        return Tmp.v1.trns(ringRotations[ring] + (idx / 2) * 90f, ringPos[ring].x, Mathf.signs[idx % 2] * ringPos[ring].y);
-    }
-
     private void drawCircle3D(float x, float y, float rx, float ry, float rz, float radius, float rotation, int sides) {
+        if (sides <= 2) return;
         Lines.beginLine();
         for (int i = 0; i <= sides; i++) {
-            float ang = i * (360f / sides) + rotation;
-            Vec3 v3 = Tmp.v31.set(Mathf.cosDeg(ang) * radius, Mathf.sinDeg(ang) * radius, 0f).rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
+            float ang = (i * (360f / 64f)) + rotation;
+            Vec3 v3 = Tmp.v31.set(Mathf.cosDeg(ang) * radius, Mathf.sinDeg(ang) * radius, 0f)
+                    .rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
             float sz1 = 700f / (700f - v3.z);
             Lines.linePoint(x + v3.x * sz1, y + v3.y * sz1);
         }
         Lines.endLine();
     }
-                    }
+}
