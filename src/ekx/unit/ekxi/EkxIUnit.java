@@ -1,6 +1,5 @@
 package ekx.unit.ekxi;
 
-import mindustry.Vars; // 引入了 Vars 才能用 Vars.headless
 import mindustry.gen.*;
 import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
 
@@ -11,22 +10,15 @@ public class EkxIUnit extends UnitEntity {
         return true;
     }
 
+    // 去掉了对 EkxIManager 的引用，防止找不到文件报错
     @Override
     public void add() {
         super.add();
-        // 加上 Vars. 前缀
-        if (!Vars.headless && isAdded()) {
-            EkxIManager.register(this);
-        }
     }
 
     @Override
     public void remove() {
         super.remove();
-        // 加上 Vars. 前缀
-        if (!Vars.headless) {
-            EkxIManager.unregister(this);
-        }
     }
 
     @Override
