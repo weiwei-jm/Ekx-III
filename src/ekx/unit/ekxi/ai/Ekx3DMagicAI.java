@@ -111,7 +111,8 @@ public class Ekx3DMagicAI extends AttackAI {
             }
         }
         for (int i = 0; i < 3; i++) ringReloads[i] -= Time.delta;
-                                }
+    }
+
     void updateTargeting() {
         if ((targetingUpdate -= Time.delta) <= 0f) {
             nearests.clear();
@@ -124,7 +125,7 @@ public class Ekx3DMagicAI extends AttackAI {
                         nearestScore.add(dst);
                     } else {
                         for (int i = nearests.size - 1; i >= 0; i--) {
-                            if (dst <= nearestScore.items[i]) {
+     if (dst <= nearestScore.items[i]) {
                                 nearests.insert(i + 1, u);
                                 nearestScore.insert(i + 1, dst);
                                 if (nearestScore.size > 24) {
@@ -139,17 +140,6 @@ public class Ekx3DMagicAI extends AttackAI {
             }
             targetingUpdate = 5f;
         }
-    }
-
-    private void drawCircle3D(float x, float y, float rx, float ry, float rz, float radius, float rotation, int sides) {
-        Lines.beginLine();
-        for (int i = 0; i <= sides; i++) {
-            float ang = i * (360f / sides) + rotation;
-            Vec3 v3 = Tmp.v31.set(Mathf.cosDeg(ang) * radius, Mathf.sinDeg(ang) * radius, 0f).rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
-            float sz1 = 700f / (700f - v3.z);
-            Lines.linePoint(x + v3.x * sz1, y + v3.y * sz1);
-        }
-        Lines.endLine();
     }
 
     @Override
@@ -212,4 +202,15 @@ public class Ekx3DMagicAI extends AttackAI {
         if (ringPos[ring].y == 0) return Tmp.v1.trns(ringRotations[ring] + idx * 45f, ringPos[ring].x);
         return Tmp.v1.trns(ringRotations[ring] + (idx / 2) * 90f, ringPos[ring].x, Mathf.signs[idx % 2] * ringPos[ring].y);
     }
-}
+
+    private void drawCircle3D(float x, float y, float rx, float ry, float rz, float radius, float rotation, int sides) {
+        Lines.beginLine();
+        for (int i = 0; i <= sides; i++) {
+            float ang = i * (360f / sides) + rotation;
+            Vec3 v3 = Tmp.v31.set(Mathf.cosDeg(ang) * radius, Mathf.sinDeg(ang) * radius, 0f).rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
+            float sz1 = 700f / (700f - v3.z);
+            Lines.linePoint(x + v3.x * sz1, y + v3.y * sz1);
+        }
+        Lines.endLine();
+    }
+                    }
