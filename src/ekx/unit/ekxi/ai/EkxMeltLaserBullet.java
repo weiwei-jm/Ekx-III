@@ -25,8 +25,6 @@ public class EkxMeltLaserBullet extends BulletType {
     Color[] colors = {EkxPal.empathy.cpy().a(0.4f), EkxPal.empathy, Color.white};
     float[] widths = {1.5f, 1f, 0.8f};
 
-    TextureRegion hcircle;
-
     public EkxMeltLaserBullet() {
         speed = 0f;
         collides = collidesTiles = false;
@@ -49,11 +47,6 @@ public class EkxMeltLaserBullet extends BulletType {
         drawSize = length * 2.1f;
         knockback = 60f;
         layer = (Layer.bullet + Layer.effect) / 2;
-    }
-
-    @Override
-    public void load() {
-        hcircle = Core.atlas.find("hcircle");
     }
 
     float getLaserWidth(float dst) {
