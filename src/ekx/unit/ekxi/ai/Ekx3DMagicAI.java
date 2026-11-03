@@ -89,8 +89,7 @@ public class Ekx3DMagicAI extends AttackAI {
             ended = true;
         }
     }
-
-    @Override
+    
     public void draw() {
         // 计算全局透明度（在最后0.5秒慢慢消失）
         float fadeAlpha = 1f;
