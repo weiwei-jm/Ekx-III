@@ -138,4 +138,130 @@ public class Ekx3DMagicAI extends AttackAI {
 
     void updateTargeting() {
         if ((targetingUpdate -= Time.delta) <= 0f) {
-            nearest
+            s.clear();
+            nearestScore.clear();
+            for (Unit u : Groups.unit) {
+                if (u.team != unit.team) {
+                    float dst = u.dst(unit);
+                    if (nearestScore.isEmpty()) {
+                        nearests.add(u);
+                        nearestScore.add(dst);
+                    } else {
+                        for (int i = nearests.size - 1; i >= 0; i--) {
+                            float sdst = nearestScore.items[i];
+                            if (dst <= sdst) {
+                                nearests.insert(i + 1, u);
+                                nearestScore.insert(i + 1, dst);
+                                if (nearestScore.size > (3 * 8)) {
+                                    nearests.remove(0);
+                                    nearestScore.removeIndex(0);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            targetingUpdate = 5f;
+        }
+    }
+
+    // 纯代码绘制 3D 蓝光环
+    private void drawCircle3D(float x, float y, float rx, float ry, float rz, float radius, float rotation, int sides) {
+        Lines.beginLine();
+        for (int i = 0; i <= sides; i++) {
+            float ang = i * (360f / sides) + rotation;
+            Vec3 v3 = Tmp.v31.set(Mathf.cosDeg(ang) * radius, Mathf.sinDeg(ang) * radius, 0f)
+                    .rotate(Vec3.Y, ry).rotate(Vec3.X, rx).rotate(Vec3.Z, rz);
+            float sz1 = 700f / (700f - v3.z);
+            Lines.linePoint(x + v3.x * sz1, y + v3.y * sz1);
+        }
+        Lines.endLine();
+    }
+
+    @Override
+    public void draw() {
+        Color darkC = Tmp.c1.set(ExkPal.empathyDark).lerp(ExkPal.empathy, Mathf.absin(2f, 1f));
+        Color col1 = Tmp.c2.set(ExkPal.empathy).lerp(Color.white, Mathf.absin(2f, 1f));
+
+        float fin = Mathf.clamp(time / 40f);
+        Draw.blend(mindustry.graphics.Blending.additive);
+        Draw.color(darkC, fin * 0.5f);
+        
+        for (int i = 0; i < 3; i++) {
+            Draw.color(darkC, fin);
+            int k = i * 3;
+            // 绘制 3D 蓝光环
+            drawCircle3D(unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], 80f + i * 40f, ringRotations[i], 64);
+            
+            Draw.color(Color.white);
+            for (int j = 0; j < 8; j++) {
+                Vec2 p = eyePos(i, j).scl(2f);
+                Tmp.v2.set(p).setLength(120f);
+                float ll = p.len() / Tmp.v2.len();
+                
+                Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
+                float sz1 = 700f / (700f - v3.z);
+                v3.x *= sz1;
+                v3.y *= sz1;
+
+                Fill.circle(v3.x * ll + unit.x, v3.y * ll + unit.y, 2f * fin);
+            }
+        }
+        Draw.blend();
+
+        float z = Draw.z();
+        Draw.z(Layer.flyingUnit + 1f);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 8; j++) {
+                int idx = (i * 8 + j) * 3;
+                float x = eyeLasers[idx];
+                float y = eyeLasers[idx + 1];
+                float time = eyeLasers[idx + 2];
+                if (time <= 0.0001f) continue;
+
+                Vec2 p = eyePos3D(i, j, 120f);
+                float f = time / 30f;
+                float s = 5.25f * f;
+
+                Draw.z(z);
+                Draw.color(col1);
+                Lines.stroke(s);
+                Lines.line(p.x, p.y, x, y, false);
+                Fill.circle(p.x, p.y, s);
+                Fill.circle(x, y, s);
+                Draw.z(z + 0.01f);
+                Draw.color(Color.white);
+                Lines.stroke(s * 0.5f);
+                Lines.line(p.x, p.y, x, y, false);
+                Fill.circle(p.x, p.y, s * 0.5f);
+                Fill.circle(x, y, s * 0.5f);
+            }
+        }
+        Draw.z(z);
+        Draw.color();
+    }
+
+    Vec2 eyePos3D(int ring, int idx, float size) {
+        Vec2 p = eyePos(ring, idx).scl(2f);
+        Tmp.v2.set(p).setLength(size);
+        float ll = p.len() / Tmp.v2.len();
+        int k = ring * 3;
+
+        Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
+        float sz1 = 700f / (700f - v3.z);
+        v3.x *= sz1;
+        v3.y *= sz1;
+
+        return Tmp.v3.set(v3.x * ll + unit.x, v3.y * ll + unit.y);
+    }
+
+    Vec2 eyePos(int ring, int idx) {
+        if (ringPos[ring].y == 0) {
+            return Tmp.v1.trns(ringRotations[ring] + idx * 45f, ringPos[ring].x);
+        }
+        int rot = (idx / 2);
+        float side = Mathf.signs[idx % 2] * ringPos[ring].y;
+        return Tmp.v1.trns(ringRotations[ring] + rot * 90f, ringPos[ring].x, side);
+    }
+                                                                                      }
