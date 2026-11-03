@@ -5,7 +5,7 @@ import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
-import ekx.ExkPal;
+import ekx.EkxPal; // 修正了这里
 import mindustry.content.*;
 import mindustry.entities.bullet.*;
 import mindustry.gen.*;
@@ -15,7 +15,7 @@ public class EkxSmallLaserBullet extends BulletType {
     float length = 600f;
     float width = 8f;
 
-    Color[] colors = {ExkPal.empathy.cpy().a(0.5f), ExkPal.empathy, ExkPal.empathyAdd, Color.white};
+    Color[] colors = {EkxPal.empathy.cpy().a(0.5f), EkxPal.empathy, EkxPal.empathyAdd, Color.white}; // 修正了这里
     float[] widths = {1.65f, 1f, 0.66f, 0.5f};
 
     public EkxSmallLaserBullet() {
@@ -47,7 +47,7 @@ public class EkxSmallLaserBullet extends BulletType {
 
     private void drawMagicCircle(float x, float y, float rotZ, float radius, float time) {
         Draw.z(Layer.flyingUnit - 1f);
-        Draw.color(ExkPal.empathyAdd, 0.8f);
+        Draw.color(EkxPal.empathyAdd, 0.8f); // 修正了这里
         Lines.stroke(2f);
         Lines.beginLine();
         for (int i = 0; i <= 24; i++) {
@@ -55,6 +55,7 @@ public class EkxSmallLaserBullet extends BulletType {
             Lines.linePoint(x + Mathf.cosDeg(ang) * radius, y + Mathf.sinDeg(ang) * radius * 0.4f);
         }
         Lines.endLine();
+
         Draw.color(Color.white, 0.9f);
         Lines.stroke(2.5f);
         Lines.beginLine();
@@ -75,6 +76,7 @@ public class EkxSmallLaserBullet extends BulletType {
         float l = fc * length;
         Vec2 v = Tmp.v1.trns(b.rotation(), l).add(b);
         float sin = (Mathf.absin(5f, 0.1f) + 1f);
+
         Draw.z(Layer.bullet + 1f);
         for (int i = 0; i < 4; i++) {
             Draw.color(colors[i]);
@@ -82,6 +84,7 @@ public class EkxSmallLaserBullet extends BulletType {
             Lines.line(b.x, b.y, v.x, v.y, false);
             Drawf.tri(v.x, v.y, Lines.getStroke(), mwidth * 3 + width / 1.5f, b.rotation());
             Drawf.tri(v.x, v.y, Lines.getStroke(), mwidth * 2 + width / 2f, b.rotation() + 180f);
+
             for (int s : Mathf.signs) {
                 Drawf.tri(b.x, b.y, Lines.getStroke() / 2f, (mwidth * widths[i] * 2 + 120f) * sin * fc, b.rotation() + 90f * s);
             }
