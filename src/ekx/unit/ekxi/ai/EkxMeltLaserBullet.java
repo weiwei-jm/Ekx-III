@@ -99,11 +99,11 @@ public class EkxMeltLaserBullet extends BulletType {
         }
     }
 
-    @Override
+    @override
     public void init(Bullet b) {
         Tmp.v1.trns(b.rotation(), 40f).add(b.x, b.y);
         Effect.shake(10f, 10f, b.x, b.y);
-        mindustry.content.Sounds.laser.at(b.x, b.y, 2f, 1.5f); // 修复音效
+        Sounds.laserBlast.at(b.x, b.y, 2f, 1.5f);
     }
 
     @Override
@@ -151,8 +151,8 @@ public class EkxMeltLaserBullet extends BulletType {
         
         if (b.time > 140f) {
             float scl = Interp.pow2Out.apply(Mathf.clamp((b.time - 140f) / 5)) * Interp.pow3In.apply(Mathf.clamp((lifetime - b.time) / 80f));
-            Rand r = Utils.rand, r2 = Utils.rand2;
-            r.setSeed(b.id + 1236);
+            Rand r = new Rand(b.id + 1236L);
+            Rand r2 = new Rand(b.id + 999L);
 
             for (int i = 0; i < 75; i++) {
                 float d = r.random(20f, 40f);
@@ -161,7 +161,7 @@ public class EkxMeltLaserBullet extends BulletType {
                 float slope = Interp.pow2Out.apply(Mathf.curve(dtime, 0f, 0.05f) * Mathf.curve(1 - dtime, 0f, 0.05f));
 
                 int seed = (int) (time / d) + r.nextInt();
-                r2.setSeed(seed);
+                r2.setSeed(r.nextLong());
 
                 float dh = r2.random(120f, 220f);
                 float dw = dh * r2.random(0.05f, 0.15f) * scl * slope;
