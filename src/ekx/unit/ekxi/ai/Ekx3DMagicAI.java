@@ -10,7 +10,7 @@ import arc.struct.FloatSeq;
 import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
-import ekx.ExkPal;
+import ekx.EkxPal;
 import mindustry.content.Fx;
 import mindustry.gen.Groups;
 import mindustry.gen.Teamc;
