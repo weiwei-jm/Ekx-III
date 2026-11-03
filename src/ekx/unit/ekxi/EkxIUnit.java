@@ -1,5 +1,6 @@
 package ekx.unit.ekxi;
 
+import mindustry.Vars; // 引入了 Vars 才能用 Vars.headless
 import mindustry.gen.*;
 import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
 
@@ -13,7 +14,8 @@ public class EkxIUnit extends UnitEntity {
     @Override
     public void add() {
         super.add();
-        if (!headless && isAdded()) {
+        // 加上 Vars. 前缀
+        if (!Vars.headless && isAdded()) {
             EkxIManager.register(this);
         }
     }
@@ -21,15 +23,16 @@ public class EkxIUnit extends UnitEntity {
     @Override
     public void remove() {
         super.remove();
-        if (!headless) {
+        // 加上 Vars. 前缀
+        if (!Vars.headless) {
             EkxIManager.unregister(this);
         }
     }
 
     @Override
     public void update() {
-        // 单位只需要处理自身的血量状态，战斗逻辑全权交给 Scheduler
         super.update();
+        // 锁死 1 血
         if (!dead) {
             health = 1f;
         }
