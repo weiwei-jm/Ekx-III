@@ -136,8 +136,9 @@ public class EkxMeltLaserBullet extends BulletType {
             float dw = w * widths[i] * (1 + Mathf.absin(8f, 0.1f));
 
             Draw.color(colors[i]);
-            Lines.stroke(dw);
-            Draw.rect(hcircle, v.x, v.y, end * 2, Lines.getStroke(), b.rotation() + 180f);
+            Lines.stroke(dw); 
+            Fill.circle(v.x, v.y, Lines.getStroke() / 2f);
+Lines.lineAngle(v.x, v.y, b.rotation(), end, false);
             Lines.lineAngle(v.x, v.y, b.rotation(), length - end, false);
             Drawf.tri(v2.x, v2.y, Lines.getStroke(), width * 2 + dw, b.rotation());
         }
