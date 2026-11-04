@@ -54,7 +54,17 @@ public class EkxSurroundLaserAI extends AttackAI {
                     int a = colors.length;
                     for (int i = 0; i < a; i++) {
                         float ang1 = (360f / a) * i - 90f;
-                        Damage.collideLine(null, unit.team, unit.x, unit.y, ang1, 800f, false, true, -1);
+                        // 手写遍历判定，替代会崩溃的 Damage.collideLine
+for (mindustry.gen.Unit u : mindustry.gen.Groups.unit) {
+    if (u.team != unit.team && u.isValid()) {
+        float angleToU = unit.angleTo(u);
+        float dstToU = unit.dst(u);
+        // 如果在这个角度内，且距离小于 800
+        if (dstToU < 800f && arc.math.Angles.angleDist(ang1, angleToU) < arc.math.Mathf.atan2(u.hitSize / 2f, dstToU)) {
+            u.damagePierce(10000f); // 造成真实伤害
+        }
+    }
+}
                     }
                     laserTime = 10f;
                 }
