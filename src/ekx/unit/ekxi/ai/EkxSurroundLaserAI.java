@@ -110,7 +110,7 @@ public class EkxSurroundLaserAI extends AttackAI {
                     float ang3A = (j / 32f - 0.5f) * 360f * fin2, ang3B = ((j + 1f) / 32f - 0.5f) * 360f * fin2;
                     Vec2 vA = Tmp.v1.trns(ang2A + ang3A, 150f * fout2I).add(npos).add(unit);
                     Vec2 vB = Tmp.v2.trns(ang2B + ang3B, 150f * fout2I).add(npos).add(unit);
-                    float x1 = vA.x, float x1 = vA.x, y1 = vA.y, x2 = vB.x, y2 = vB.y;
+                    float x1 = vA.x, y1 = vA.y, x2 = vB.x, y2 = vB.y;
                     vA.trns(ang2A + ang3A, 20f * fout);
                     vB.trns(ang2B + ang3B, 20f * fout);
                     for (int k = 0; k < main.length; k++) {
