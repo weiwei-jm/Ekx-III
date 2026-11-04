@@ -42,7 +42,7 @@ public class EkxSurroundLaserAI extends AttackAI {
 
         if (time >= 90f && !firing) {
             firing = true;
-            mindustry.content.Sounds.beamHeal.at(unit.x, unit.y);
+            Sounds.beamHeal.at(unit.x, unit.y);
             mindustry.Vars.renderer.shake(15f, 30f);
         }
 
@@ -90,7 +90,6 @@ public class EkxSurroundLaserAI extends AttackAI {
         }
     }
 
-    @Override
     public void draw() {
         int a = colors.length;
         float fin1 = Interp.pow2.apply(Mathf.clamp(time / 60f));
