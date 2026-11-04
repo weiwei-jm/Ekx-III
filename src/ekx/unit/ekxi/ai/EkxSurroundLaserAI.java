@@ -11,6 +11,7 @@ import ekx.EkxPal;
 import mindustry.entities.Damage;
 import mindustry.gen.Teamc;
 import mindustry.graphics.Layer;
+import mindustry.gen.Sounds;
 
 public class EkxSurroundLaserAI extends AttackAI {
     static int[] main = {0x4FB8E6FF, 0x8FE7FFFF, 0xB8F2FFFF, 0xFFFFFFff, 0x8FE7FFFF, 0x2A7A99FF};
@@ -42,7 +43,7 @@ public class EkxSurroundLaserAI extends AttackAI {
 
         if (time >= 90f && !firing) {
             firing = true;
-            Sounds.beamHeal.at(unit.x, unit.y);
+            mindustry.gen.Sounds.beamHeal.at(unit.x, unit.y);
             mindustry.Vars.renderer.shake(15f, 30f);
         }
 
