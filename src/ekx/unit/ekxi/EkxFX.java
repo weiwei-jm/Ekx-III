@@ -2,12 +2,12 @@ package ekx.unit.ekxi;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
-import arc.math.Interp;     // 补充这个
+import arc.math.Interp;
 import arc.math.Mathf;
-import arc.util.Rand;       // 补充这个
-import arc.util.Utils;      // 补充这个
+import arc.util.Rand;     // <--- 放在这里
+import arc.util.Utils;    // <--- 放在这里
 import mindustry.entities.Effect;
-import mindustry.graphics.*;
+import mindustry.graphics.Layer;
 
 public class EkxFX {
     public static final Color customColor = Color.valueOf("6C9FFFFF");
