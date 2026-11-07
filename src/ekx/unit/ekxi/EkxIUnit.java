@@ -7,11 +7,10 @@ import mindustry.type.StatusEffect;
 
 public class EkxIUnit extends UnitEntity {
     
-    // === 原 EkxExecutorUnit 的所有机制 ===
     public boolean isReviving = false;
     public float reviveTimer = 0f;
-    public final float reviveDuration = 300f; // 5秒
-    public boolean castingSkill = false; // 放技能期间无敌
+    public final float reviveDuration = 300f; // 5秒复活读条
+    public boolean castingSkill = false;      // 释放技能无敌
 
     @Override
     public void update() {
@@ -24,7 +23,7 @@ public class EkxIUnit extends UnitEntity {
             if (reviveTimer >= reviveDuration) {
                 isReviving = false;
                 reviveTimer = 0f;
-                this.health = this.maxHealth;
+                this.health = this.maxHealth; // 读条完成，满血复活
                 Fx.massiveExplosion.at(this.x, this.y);
             }
         }
@@ -39,29 +38,29 @@ public class EkxIUnit extends UnitEntity {
 
     @Override
     public void damage(float amount) {
-        // 放技能期间绝对无敌
+        // 1. 放技能期间绝对无敌
         if (castingSkill) return;
         
-        // 复活期间如果被打，直接死透
+        // 2. 如果处于“复活读条”期间，跟原版普通单位一模一样，正常挨打，不减免！
         if (isReviving) {
             super.damage(amount);
             return;
         }
 
-        // 所有伤害减半
+        // 3. 正常存活状态下，所有伤害减半
         super.damage(amount * 0.5f);
     }
 
     @Override
     public void kill() {
         if (!isReviving) {
-            // 第一次死亡，进入复活状态
+            // 第一次死亡：进入读条状态
             isReviving = true;
             reviveTimer = 0f;
             this.health = 0; 
             Fx.massiveExplosion.at(this.x, this.y);
         } else {
-            // 复活期间再次死亡，彻底死透
+            // 如果复活读条期间又被别人打死了，那就彻底死透，无法复活
             super.kill();
         }
     }
