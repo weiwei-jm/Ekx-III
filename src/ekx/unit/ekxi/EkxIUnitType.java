@@ -35,10 +35,10 @@ public class EkxIUnitType extends UnitType {
 
     // 【重点】必须加载贴图
     @Override
-    public void load() {
+        public void load() {
         super.load();
         EkxRegions.load();
-    }
+}
 
     @Override
     public void init() {
