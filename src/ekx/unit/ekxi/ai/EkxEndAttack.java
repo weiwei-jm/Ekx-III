@@ -238,3 +238,123 @@ public class EkxEndAttack extends AttackAI {
         return Tmp.v1.trns(ringRotations[ring] + rot * 90f, ringPos[ring].x, side);
     }
 }
+
+void drawEnd() {
+        float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
+        float fout = Mathf.clamp((10f * 60 - endTime) / 10f);
+        float sfout = Mathf.clamp((10f * 60 - endTime) / 30f);
+        float z = Draw.z();
+        Draw.z(Layer.blockOver);
+        Draw.color(Color.red);
+        Draw.blend(EkxGraphicUtils.multiply);
+
+        if (fout >= 0.999f) Fill.poly(unit.x, unit.y, 64, size);
+        else Fill.rect(Core.camera.position.x, Core.camera.position.y, Core.camera.width, Core.camera.height * fout);
+
+        Draw.blend(Blending.additive);
+        Draw.color(Color.valueOf("6C9FFFFF"));
+
+        Draw.z(Layer.flyingUnit);
+        float[] ar = crosses.items;
+        int s = crosses.size;
+        TextureRegion flashReg = EkxRegions.flash;
+
+        Rect r = Tmp.r1;
+        Core.camera.bounds(r);
+        for (int i = 0; i < s; i += 5) {
+            float x = ar[i], y = ar[i + 1], rot = ar[i + 2], scl = ar[i + 3] * fout, fin = ar[i + 4];
+            Tmp.r2.setCentered(x, y, flashReg.width * scl);
+            if (r.overlaps(Tmp.r2)) {
+                if (Mathf.dst(unit.x, unit.y, x, y) < size) {
+                    float f = swing.apply(fin);
+                    Draw.rect(flashReg, x, y, flashReg.width * scl * f, flashReg.height * scl * f, rot);
+                }
+            }
+        }
+        Draw.color();
+        float f = swing.apply(Mathf.clamp((endTime - 30f) / 15f));
+        float sin = 1f + Mathf.absin(2f, 0.1f);
+        for (int i = 0; i < 4; i++) {
+            Drawf.tri(unit.x, unit.y, 15f * sfout, 280f * f * sfout * sin, i * 90);
+        }
+        Lines.stroke(3f * Mathf.clamp((endTime - 30f) / 20f) * sfout * sin);
+        Lines.circle(unit.x, unit.y, 75f);
+        Draw.blend();
+        Draw.color();
+        Draw.z(z);
+    }
+
+    @Override
+    public void draw() {
+        if (ending) drawEnd();
+        Color darkC = Tmp.c1.set(Color.valueOf("3A5F9FFF")).lerp(Color.valueOf("6C9FFFFF"), Mathf.absin(2f, 1f));
+        Color col1 = Tmp.c2.set(Color.valueOf("6C9FFFFF")).lerp(Color.white, Mathf.absin(2f, 1f));
+
+        float fin = Mathf.clamp(time / 40f);
+        Draw.blend(Blending.additive);
+        Draw.color(darkC, fin * 0.5f);
+        
+        TextureRegion mag = EkxRegions.magicCircle;
+        Draw.rect(mag, unit.x, unit.y, mag.width * Draw.scl * 2f, mag.height * Draw.scl * 2f);
+        
+        for (int i = 0; i < 3; i++) {
+            Draw.color(darkC, fin);
+            TextureRegion reg = EkxRegions.endAPI[i];
+            int k = i * 3;
+            EkxGraphicUtils.circle3D(reg, unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], reg.width * Draw.scl, ringRotations[i], 64);
+            Draw.color(Color.white);
+            for (int j = 0; j < 8; j++) {
+                Vec2 p = eyePos(i, j).scl(2f);
+                Tmp.v2.set(p).setLength(reg.width * Draw.scl);
+                float ll = p.len() / Tmp.v2.len();
+                Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
+                float sz1 = 700f / (700f - v3.z);
+                v3.x *= sz1; v3.y *= sz1;
+                Fill.circle(v3.x * ll + unit.x, v3.y * ll + unit.y, 2f * fin);
+            }
+        }
+        Draw.blend();
+
+        float z = Draw.z();
+        for (int i = 0; i < 3; i++) {
+            TextureRegion reg = EkxRegions.endAPI[i];
+            float size = reg.width * Draw.scl;
+            for (int j = 0; j < 8; j++) {
+                int idx = (i * 8 + j) * 3;
+                float x = eyeLasers[idx], y = eyeLasers[idx + 1], t = eyeLasers[idx + 2];
+                if (t <= 0.0001f) continue;
+                Vec2 p = eyePos3D(i, j, size);
+                float f = t / 30f, s = 5.25f * f;
+                Draw.z(z);
+                Draw.color(col1);
+                Lines.stroke(s);
+                Lines.line(p.x, p.y, x, y, false);
+                Fill.circle(p.x, p.y, s);
+                Fill.circle(x, y, s);
+                Draw.z(z + 0.01f);
+                Draw.color(Color.white);
+                Lines.stroke(s * 0.5f);
+                Lines.line(p.x, p.y, x, y, false);
+                Fill.circle(p.x, p.y, s * 0.5f);
+                Fill.circle(x, y, s * 0.5f);
+            }
+        }
+        Draw.z(z);
+        Draw.color();
+    }
+
+    Vec2 eyePos3D(int ring, int idx, float size) {
+        Vec2 p = eyePos(ring, idx).scl(2f);
+        Tmp.v2.set(p).setLength(size);
+        float ll = p.len() / Tmp.v2.len();
+        int k = ring * 3;
+        Vec3 v3 = Tmp.v31.set(Tmp.v2.x, Tmp.v2.y, 0f).rotate(Vec3.Y, ringRotations3D[k + 1]).rotate(Vec3.X, ringRotations3D[k]).rotate(Vec3.Z, ringRotations3D[k + 2]);
+        float sz1 = 700f / (700f - v3.z);
+        v3.x *= sz1; v3.y *= sz1;
+        return Tmp.v3.set(v3.x * ll + unit.x, v3.y * ll + unit.y);
+    }
+
+    Vec2 eyePos(int ring, int idx) {
+        return Tmp.v1.trns(ringRotations[ring] + rot * 90f, ringPos[ring].x, side);
+    }
+}
