@@ -1,50 +1,68 @@
 package ekx.unit.ekxi;
 
-import mindustry.gen.*;
-import mindustry.world.blocks.defense.turrets.Turret.TurretBuild;
+import arc.util.Time;
+import mindustry.content.Fx;
+import mindustry.gen.UnitEntity;
+import mindustry.type.StatusEffect;
 
 public class EkxIUnit extends UnitEntity {
     
-    @Override
-    public boolean isBoss() {
-        return true;
-    }
-
-    // 去掉了对 EkxIManager 的引用，防止找不到文件报错
-    @Override
-    public void add() {
-        super.add();
-    }
-
-    @Override
-    public void remove() {
-        super.remove();
-    }
+    // === 原 EkxExecutorUnit 的所有机制 ===
+    public boolean isReviving = false;
+    public float reviveTimer = 0f;
+    public final float reviveDuration = 300f; // 5秒
+    public boolean castingSkill = false; // 放技能期间无敌
 
     @Override
     public void update() {
         super.update();
-        // 锁死 1 血
-        if (!dead) {
-            health = 1f;
+        
+        if (isReviving) {
+            reviveTimer += Time.delta;
+            this.vel.setZero(); // 复活期间锁定移动
+            
+            if (reviveTimer >= reviveDuration) {
+                isReviving = false;
+                reviveTimer = 0f;
+                this.health = this.maxHealth;
+                Fx.massiveExplosion.at(this.x, this.y);
+            }
         }
     }
 
     @Override
-    public void damage(float amount) { }
+    public void apply(StatusEffect effect, float duration) {
+        // 免疫所有负面效果
+        if (effect.disadvantageous()) return;
+        super.apply(effect, duration);
+    }
 
     @Override
-    public void damagePierce(float amount, boolean withEffect) { }
+    public void damage(float amount) {
+        // 放技能期间绝对无敌
+        if (castingSkill) return;
+        
+        // 复活期间如果被打，直接死透
+        if (isReviving) {
+            super.damage(amount);
+            return;
+        }
+
+        // 所有伤害减半
+        super.damage(amount * 0.5f);
+    }
 
     @Override
-    public void collision(Hitboxc other, float x, float y) {
-        super.collision(other, x, y);
-        if (other instanceof Bullet b) {
-            float amount = b.damage;
-            Object owner = b.owner;
-            if (owner instanceof Unit u) u.damagePierce(amount);
-            else if (owner instanceof TurretBuild tb) tb.damagePierce(amount);
-            b.remove();
+    public void kill() {
+        if (!isReviving) {
+            // 第一次死亡，进入复活状态
+            isReviving = true;
+            reviveTimer = 0f;
+            this.health = 0; 
+            Fx.massiveExplosion.at(this.x, this.y);
+        } else {
+            // 复活期间再次死亡，彻底死透
+            super.kill();
         }
     }
 }
