@@ -27,10 +27,17 @@ public class EkxIUnitType extends UnitType {
         engineSize = -1f;
         
         controller = u -> new WeaponSchedulerAI();
-        constructor = EkxIUnit::new; // 这里改成了 EkxIUnit
+        constructor = EkxIUnit::new;
 
         envEnabled = Env.any;
         envDisabled = 0;
+    }
+
+    // 【重点】必须加载贴图
+    @Override
+    public void load() {
+        super.load();
+        EkxRegions.load();
     }
 
     @Override
@@ -43,7 +50,7 @@ public class EkxIUnitType extends UnitType {
 
     @Override
     public void update(Unit unit) {
-        if (!(unit instanceof EkxIUnit)) { // 这里也改成了 EkxIUnit
+        if (!(unit instanceof EkxIUnit)) {
             unit.destroy();
             return;
         }
