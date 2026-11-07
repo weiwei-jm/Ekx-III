@@ -2,16 +2,16 @@ package ekx.unit.ekxi;
 
 import arc.graphics.Color;
 import arc.graphics.g2d.*;
+import arc.math.Interp;
 import arc.math.Mathf;
-import arc.util.Time;
+import arc.util.Rand;
+import arc.util.Utils;
 import mindustry.entities.Effect;
 import mindustry.graphics.Layer;
 
 public class EkxFX {
-    // 改成了你的专属蓝 6C9FFFFF
     public static final Color customColor = Color.valueOf("6C9FFFFF");
 
-    // 复制原版 endFlash
     public static Effect endFlash = new Effect(15f, e -> {
         float f = Interp.pow2In.apply(Mathf.curve(e.fin(), 0f, 0.1f));
         float fo = Mathf.curve(e.fout(), 0.4f, 1f);
@@ -29,11 +29,10 @@ public class EkxFX {
         }
     }).layer(Layer.flyingUnit + 0.1f);
 
-    // 复制原版 endDeath（死亡溅射）
     public static Effect endDeath = new Effect(50f, 1000f, e -> {
         float fin1 = Mathf.curve(e.fin(), 0f, 0.65f);
         float size = e.rotation;
-        arc.util.Rand r = arc.util.Utils.rand;
+        Rand r = Utils.rand;
         r.setSeed(e.id);
         e.lifetime = 50f + r.range(4f);
         int base = (int)((size * size) / 34f) + 2;
@@ -54,9 +53,8 @@ public class EkxFX {
         }
     });
 
-    // 复制原版 endSplash（地面溅射）
     public static Effect endSplash = new Effect(35f, 800f, e -> {
-        arc.util.Rand r = arc.util.Utils.rand;
+        Rand r = Utils.rand;
         r.setSeed(e.id);
         e.lifetime = 50f + r.range(16f);
         Draw.color(Color.valueOf("500000"));
@@ -69,9 +67,8 @@ public class EkxFX {
             float len = r.random(350f, 900f);
             if (c > 0.0001f && c < 0.9999f) {
                 arc.math.geom.Vec2 v = arc.util.Tmp.v1.trns(ang, len * Interp.pow2Out.apply(c)).add(e.x, e.y);
-                // 简易菱形绘制替代原版工具类
                 Drawf.tri(v.x, v.y, scl * 0.22f * (1f - Interp.pow3In.apply(c)), scl * Interp.pow3Out.apply(Mathf.curve(c, 0f, 0.5f)) + scl * 0.5f, ang);
             }
         }
     }).layer(Layer.darkness + 1f);
-                                  }
+        }
