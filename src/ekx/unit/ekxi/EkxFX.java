@@ -4,8 +4,6 @@ import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.math.Interp;
 import arc.math.Mathf;
-import arc.util.Rand;     // <--- 放在这里
-import arc.util.Utils;    // <--- 放在这里
 import mindustry.entities.Effect;
 import mindustry.graphics.Layer;
 
