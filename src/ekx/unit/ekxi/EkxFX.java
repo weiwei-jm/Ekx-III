@@ -32,7 +32,7 @@ public class EkxFX {
     public static Effect endDeath = new Effect(50f, 1000f, e -> {
         float fin1 = Mathf.curve(e.fin(), 0f, 0.65f);
         float size = e.rotation;
-        Rand r = Utils.rand;
+        arc.math.Rand r = new arc.math.Rand(e.id);
         r.setSeed(e.id);
         e.lifetime = 50f + r.range(4f);
         int base = (int)((size * size) / 34f) + 2;
@@ -54,7 +54,7 @@ public class EkxFX {
     });
 
     public static Effect endSplash = new Effect(35f, 800f, e -> {
-        Rand r = Utils.rand;
+        arc.math.Rand r = new arc.math.Rand(e.id);
         r.setSeed(e.id);
         e.lifetime = 50f + r.range(16f);
         Draw.color(Color.valueOf("500000"));
