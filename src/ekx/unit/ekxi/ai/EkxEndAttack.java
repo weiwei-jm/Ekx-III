@@ -164,11 +164,19 @@ void updateEnd() {
         }
         tmpBuildings.clear();
         for (TeamData data : Vars.state.teams.present) {
-            if (data.team != unit.team && !data.buildings.isEmpty()) {
-                (b.block.size * mindustry.Vars.tilesize) / 2
+    if (data.team != unit.team && !data.buildings.isEmpty()) {
+        for (Building b : data.buildings) {
+            if (unit.within(b, size) && !(b instanceof CoreBuild)) {
+                tmpBuildings.add(b);
             }
         }
-        for (Building b : tmpBuildings) EkxIDamage.damageBuilding(b, b.maxHealth + 1000f, true, () -> EkxFX.endDeath.at(b.x, b.y, b.hitSize / 2));
+    }
+}
+for (Building b : tmpBuildings) {
+    EkxIDamage.damageBuilding(b, b.maxHealth + 1000f, true, () -> EkxFX.endDeath.at(b.x, b.y, (b.block.size * mindustry.Vars.tilesize) / 2f));
+}
+tmpBuildings.clear();
+endScanTimer = 3;
         tmpBuildings.clear();
         endScanTimer = 3;
     }
