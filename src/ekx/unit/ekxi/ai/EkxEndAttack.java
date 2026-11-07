@@ -237,7 +237,6 @@ public class EkxEndAttack extends AttackAI {
         float side = Mathf.signs[idx % 2] * ringPos[ring].y;
         return Tmp.v1.trns(ringRotations[ring] + rot * 90f, ringPos[ring].x, side);
     }
-}
 
 void drawEnd() {
         float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
