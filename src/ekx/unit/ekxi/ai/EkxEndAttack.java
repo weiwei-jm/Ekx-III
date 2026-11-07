@@ -176,8 +176,7 @@ public class EkxEndAttack extends AttackAI {
         endScanTimer -= Time.delta;
         if (endTime >= 3 * 60f) { time = 0f; flash = false; endTime = 0f; ending = false; }
     }
-
-    @Override
+    
     public void draw() {
         if (ending) {
             float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
