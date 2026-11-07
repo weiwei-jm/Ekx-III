@@ -14,7 +14,7 @@ public class EkxIUnitType extends UnitType {
         lowAltitude = true;
         hitSize = 24f;
         drag = 0.07f;
-        health = 10000f; // 给个正常血量，伤害减半和复活足够它抗了
+        health = 10000f;
         speed = 3f;
         range = 800f;
 
@@ -26,9 +26,8 @@ public class EkxIUnitType extends UnitType {
 
         engineSize = -1f;
         
-        // 这里一定要改成我们刚写的实体类
         controller = u -> new WeaponSchedulerAI();
-        constructor = EkxExecutorUnit::new;
+        constructor = EkxIUnit::new; // 这里改成了 EkxIUnit
 
         envEnabled = Env.any;
         envDisabled = 0;
@@ -44,7 +43,7 @@ public class EkxIUnitType extends UnitType {
 
     @Override
     public void update(Unit unit) {
-        if (!(unit instanceof EkxExecutorUnit)) {
+        if (!(unit instanceof EkxIUnit)) { // 这里也改成了 EkxIUnit
             unit.destroy();
             return;
         }
