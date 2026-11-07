@@ -90,11 +90,12 @@ public class EkxEndAttack extends AttackAI {
             crosses.clear();
             int size = Math.min((int) ((Vars.world.width() * Vars.world.height()) / ((200 * 200) / 8f)), 1000);
             for (int i = 0; i < size; i++) {
-                float cx = Mathf.random(Vars.world.unitWidth());
-                float cy = Mathf.random(Vars.world.unitHeight());
-                float cr = Mathf.random(360);
-                float cs = Mathf.random(1.7f, 4.25f);
-                crosses.add(cx, cy, cr, cs, 0f);
+            float cx = Mathf.random(Vars.world.unitWidth());
+            float cy = Mathf.random(Vars.world.unitHeight());
+            float cr = Mathf.random(360);
+            float cs = Mathf.random(1.7f, 4.25f);
+            crosses.add(cx, cy, cr, cs);
+            crosses.add(0f);
             }
         }
         if (ending) updateEnd();
