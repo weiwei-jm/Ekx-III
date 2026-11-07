@@ -96,7 +96,8 @@ float cx = Mathf.random(Vars.world.unitWidth());
 float cy = Mathf.random(Vars.world.unitHeight());
 float cr = Mathf.random(360);
 float cs = Mathf.random(1.7f, 4.25f);
-crosses.add(cx, cy, cr, cs, 0f);
+crosses.add(cx, cy, cr, cs);
+crosses.add(0f);
             }
         }
         if (ending) updateEnd();
@@ -175,11 +176,12 @@ void updateEnd() {
         endScanTimer = 3;
     }
     endScanTimer -= Time.delta;
-    if (endTime >= 3 * 60f) { time = 0f; flash = false; endTime = 0f; ending = false; }
-}
+        if (endTime >= 3 * 60f) { time = 0f; flash = false; endTime = 0f; ending = false; }
+    } // <--- 注意，一定要有这个独立的大括号，闭合 updateEnd 方法
 
-@Override
+    @Override
     public void draw() {
+    // ... 下面是 draw 的代码
         if (ending) {
             float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
             Draw.z(Layer.blockOver);
