@@ -179,7 +179,6 @@ void updateEnd() {
         if (endTime >= 3 * 60f) { time = 0f; flash = false; endTime = 0f; ending = false; }
     } // <--- 注意，一定要有这个独立的大括号，闭合 updateEnd 方法
 
-    @Override
     public void draw() {
     // ... 下面是 draw 的代码
         if (ending) {
