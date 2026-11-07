@@ -234,7 +234,6 @@ void drawEnd() {
         Draw.z(z);
     }
 
-    @Override
     public void draw() {
         if (ending) drawEnd();
         Color darkC = Tmp.c1.set(Color.valueOf("3A5F9FFF")).lerp(Color.valueOf("6C9FFFFF"), Mathf.absin(2f, 1f));
