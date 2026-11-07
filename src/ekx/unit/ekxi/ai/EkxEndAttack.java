@@ -90,7 +90,13 @@ public class EkxEndAttack extends AttackAI {
             crosses.clear();
             int size = Math.min((int) ((Vars.world.width() * Vars.world.height()) / ((200 * 200) / 8f)), 1000);
             for (int i = 0; i < size; i++) {
-                crosses.add(Mathf.random(Vars.world.unitWidth()), Mathf.random(Vars.world.unitHeight()), Mathf.random(360), Mathf.random(1.7f, 4.25f), 0f);
+                // 旧代码报错：crosses.add(Mathf.random(Vars.world.unitWidth()), ...);
+// 改成分别 add：
+float cx = Mathf.random(Vars.world.unitWidth());
+float cy = Mathf.random(Vars.world.unitHeight());
+float cr = Mathf.random(360);
+float cs = Mathf.random(1.7f, 4.25f);
+crosses.add(cx, cy, cr, cs, 0f);
             }
         }
         if (ending) updateEnd();
@@ -154,7 +160,11 @@ void updateEnd() {
     float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
 
     if (endScanTimer <= 0f && endTime < (1.75f * 60f)) {
-        Units.nearby(unit.x, unit.y, size, u -> { if (u.team != unit.team) u.damage(u.maxHealth + 1000f); });
+        Units.nearby(unit.x - size, unit.y - size, size * 2, size * 2, u -> { 
+    if (u.team != unit.team && u.within(unit.x, unit.y, size)) {
+        u.damage(u.maxHealth + 1000f); 
+    }
+});
         tmpBuildings.clear();
         for (TeamData data : Vars.state.teams.present) {
             if (data.team != unit.team) {
