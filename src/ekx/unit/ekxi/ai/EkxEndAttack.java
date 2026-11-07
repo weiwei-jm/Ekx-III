@@ -1,6 +1,5 @@
 package ekx.unit.ekxi.ai;
 
-import arc.Core;
 import arc.audio.Sound;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
@@ -15,8 +14,9 @@ import arc.struct.FloatSeq;
 import arc.struct.Seq;
 import arc.util.Time;
 import arc.util.Tmp;
-import ekx.unit.ekxi.EkxIUnit;
 import ekx.unit.ekxi.EkxGraphicUtils;
+import ekx.unit.ekxi.EkxIUnit;
+import ekx.unit.ekxi.EkxRegions;
 import mindustry.Vars;
 import mindustry.entities.Units;
 import mindustry.game.Teams.TeamData;
@@ -90,14 +90,11 @@ public class EkxEndAttack extends AttackAI {
             crosses.clear();
             int size = Math.min((int) ((Vars.world.width() * Vars.world.height()) / ((200 * 200) / 8f)), 1000);
             for (int i = 0; i < size; i++) {
-                // 旧代码报错：crosses.add(Mathf.random(Vars.world.unitWidth()), ...);
-// 改成分别 add：
-float cx = Mathf.random(Vars.world.unitWidth());
-float cy = Mathf.random(Vars.world.unitHeight());
-float cr = Mathf.random(360);
-float cs = Mathf.random(1.7f, 4.25f);
-crosses.add(cx, cy, cr, cs);
-crosses.add(0f);
+                float cx = Mathf.random(Vars.world.unitWidth());
+                float cy = Mathf.random(Vars.world.unitHeight());
+                float cr = Mathf.random(360);
+                float cs = Mathf.random(1.7f, 4.25f);
+                crosses.add(cx, cy, cr, cs, 0f);
             }
         }
         if (ending) updateEnd();
@@ -136,51 +133,51 @@ crosses.add(0f);
                     }
                     ringReloads[i] = ringReloadTimes[i];
                     ringIdxs[i] = Mathf.mod(ringIdxs[i] + ((i % 2) == 0 ? 1 : -1), 8);
+                }
             }
         }
+        for (int i = 0; i < 3; i++) ringReloads[i] -= Time.delta;
     }
-    for (int i = 0; i < 3; i++) ringReloads[i] -= Time.delta;
-}
 
-void updateTargeting() {
-    if ((targetingUpdate -= Time.delta) <= 0f) {
-        nearests.clear(); nearestScore.clear();
-        for (TeamData data : Vars.state.teams.present) {
-            if (data.team != unit.team) {
-                for (Unit u : data.units) { nearests.add(u); nearestScore.add(u.dst(unit)); }
-                for (Building b : data.buildings) { nearests.add(b); nearestScore.add(b.dst(unit)); }
+    void updateTargeting() {
+        if ((targetingUpdate -= Time.delta) <= 0f) {
+            nearests.clear(); nearestScore.clear();
+            for (TeamData data : Vars.state.teams.present) {
+                if (data.team != unit.team) {
+                    for (Unit u : data.units) { nearests.add(u); nearestScore.add(u.dst(unit)); }
+                    for (Building b : data.buildings) { nearests.add(b); nearestScore.add(b.dst(unit)); }
+                }
             }
+            if (nearestScore.size > 24) { nearests.setSize(24); nearestScore.setSize(24); }
+            targetingUpdate = 5f;
         }
-        if (nearestScore.size > 24) { nearests.setSize(24); nearestScore.setSize(24); }
-        targetingUpdate = 5f;
     }
-}
 
-void updateEnd() {
-    endTime += Time.delta;
-    float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
+    void updateEnd() {
+        endTime += Time.delta;
+        float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
 
-    if (endScanTimer <= 0f && endTime < (1.75f * 60f)) {
-        Units.nearby(unit.x - size, unit.y - size, size * 2, size * 2, u -> { 
-    if (u.team != unit.team && u.within(unit.x, unit.y, size)) {
-        u.damage(u.maxHealth + 1000f); 
-    }
-});
-        tmpBuildings.clear();
-        for (TeamData data : Vars.state.teams.present) {
-            if (data.team != unit.team) {
-                for (Building b : data.buildings) if (unit.within(b, size) && !(b instanceof CoreBuild)) tmpBuildings.add(b);
+        if (endScanTimer <= 0f && endTime < (1.75f * 60f)) {
+            Units.nearby(unit.x - size, unit.y - size, size * 2, size * 2, u -> { 
+                if (u.team != unit.team && u.within(unit.x, unit.y, size)) {
+                    u.damage(u.maxHealth + 1000f); 
+                }
+            });
+            tmpBuildings.clear();
+            for (TeamData data : Vars.state.teams.present) {
+                if (data.team != unit.team) {
+                    for (Building b : data.buildings) if (unit.within(b, size) && !(b instanceof CoreBuild)) tmpBuildings.add(b);
+                }
             }
+            for (Building b : tmpBuildings) b.damage(b.maxHealth + 1000f);
+            endScanTimer = 3;
         }
-        for (Building b : tmpBuildings) b.damage(b.maxHealth + 1000f);
-        endScanTimer = 3;
-    }
-    endScanTimer -= Time.delta;
+        endScanTimer -= Time.delta;
         if (endTime >= 3 * 60f) { time = 0f; flash = false; endTime = 0f; ending = false; }
-    } // <--- 注意，一定要有这个独立的大括号，闭合 updateEnd 方法
+    }
 
+    @Override
     public void draw() {
-    // ... 下面是 draw 的代码
         if (ending) {
             float size = Mathf.pow(Mathf.clamp(endTime / (1.75f * 60f)), 5) * 10000f;
             Draw.z(Layer.blockOver);
@@ -196,8 +193,7 @@ void updateEnd() {
         Draw.color(customColor, fin * 0.5f);
 
         for (int i = 0; i < 3; i++) {
-            TextureRegion reg = Core.atlas.find("jm-magic-circle"); 
-            if (!reg.found()) reg = Core.atlas.find("clear"); 
+            TextureRegion reg = EkxRegions.endAPI[i];
             int k = i * 3;
             EkxGraphicUtils.circle3D(reg, unit.x, unit.y, ringRotations3D[k], ringRotations3D[k + 1], ringRotations3D[k + 2], reg.width * Draw.scl, ringRotations[i], 64);
         }
