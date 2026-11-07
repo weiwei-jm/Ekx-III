@@ -2,9 +2,12 @@ package ekx.unit.ekxi.ai;
 
 import arc.Core;
 import arc.graphics.Color;
+import arc.graphics.Blending; // 补充这个
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.struct.Seq;       // 补充这个
+import arc.struct.FloatSeq;  // 补充这个
 import arc.util.*;
 import ekx.unit.ekxi.*;
 import mindustry.Vars;
